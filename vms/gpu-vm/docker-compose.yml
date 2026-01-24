@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,video
+    volumes:
+      - /srv/ollama/models:/models
+    ports:
+      - "11434:11434"
+    networks:
+      - gpu-vm-network
+
+  plex:
+    image: plexinc/pms-docker:latest
+    container_name: plex
+    restart: unless-stopped
+    network_mode: host
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia-modeset:/dev/nvidia-modeset
+      - /dev/nvidia-uvm:/dev/nvidia-uvm
+      - /dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools
+    environment:
+      - PLEX_UID=0
+      - PLEX_GID=0
+      - TZ=America/New_York
+    volumes:
+      - /srv/plex/config:/config
+      - /mnt/media:/media
+
+networks:
+  gpu-vm-network:
+    driver: bridge

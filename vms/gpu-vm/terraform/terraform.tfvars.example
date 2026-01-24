@@ -1,0 +1,38 @@
+# Proxmox Connection
+# Option 1: Use environment variables (recommended)
+# Set PM_API_URL, PM_USER, and either PM_PASS or PM_API_TOKEN_ID + PM_API_TOKEN_SECRET
+
+# Option 2: Uncomment and fill in these variables
+# proxmox_api_url = "https://proxmox.example.com:8006/api2/json"
+# proxmox_user    = "root@pam"
+# proxmox_password = "your-password-here"
+# OR use token-based auth:
+# proxmox_token_id     = "terraform@pve!terraform-token"
+# proxmox_token_secret = "your-token-secret-here"
+
+# Allow insecure TLS (only for self-signed certificates)
+# proxmox_insecure = false
+
+# VM Configuration
+vm_id          = 100
+vm_name        = "numenor"
+vm_cpu_cores   = 4
+vm_memory_mb   = 8192
+vm_disk_size_gb = 100
+
+# Storage Configuration
+vm_storage_pool     = "local-lvm"
+vm_iso_storage_pool = "local"
+
+# GPU Passthrough Configuration
+# Find your GPU device ID with: lspci | grep -i vga
+# Or: lspci -nn | grep -i vga
+gpu_device_id = "0000:01:00.0"  # Change this to your GPU's PCI device ID
+gpu_rombar    = 0                # 0 for passthrough, 1 to enable ROM bar
+gpu_x_vga     = 1                # 1 if this is the primary GPU, 0 otherwise
+
+# Network Configuration
+network_bridge = "vmbr0"
+
+# Proxmox Node (change to your node name)
+proxmox_target_node = "pve"
