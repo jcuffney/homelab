@@ -39,3 +39,9 @@ proxmox_insecure = true
 
 # Network Configuration (default: network_bridge="vmbr0")
 # network_bridge = "vmbr0"
+
+# Cloud-init Template (REQUIRED for cloud-init to work)
+# Set this to your Proxmox cloud-init template name
+# If you don't have a template yet, see README.md section "Cloud Image Setup" for instructions
+# Example: vm_template = "ubuntu-24.04-cloudinit-template"
+# vm_template = "your-template-name-here"

@@ -1,0 +1,235 @@
+---
+description: Core project rules and conventions for the homelab infrastructure project
+alwaysApply: true
+---
+
+# Homelab Project Rules
+
+## Project Overview
+
+This is a homelab infrastructure project using:
+- **Proxmox VE** (192.168.1.10) - Virtualization platform
+- **OPNsense** (192.168.1.1) - Router/Firewall with Unbound DNS
+- **Network**: 192.168.1.0/24 (LAN), 10.10.0.0/24 (WireGuard VPN)
+- **Security Model**: All services accessible ONLY via WireGuard VPN, NOT exposed to public internet
+
+## Project Structure
+
+```
+homelab/
+├── docs/                    # Documentation
+│   ├── networking-plan.md   # Complete networking setup guide
+│   └── networking/          # Networking documentation
+│       ├── plans/           # Implementation tasks
+│       └── README.md
+├── vms/                     # VM configurations
+│   ├── ubuntu/              # Ubuntu base VM
+│   │   ├── terraform/       # Terraform configuration
+│   │   ├── cloud-init.yaml  # Cloud-init config
+│   │   └── dotfiles/        # Shell configuration files
+│   └── gpu-vm/              # GPU-enabled VM
+│       ├── terraform/
+│       ├── cloud-init.yaml
+│       └── docker-compose.yml
+└── README.md
+```
+
+## Infrastructure Details
+
+### Network Configuration
+- **Proxmox**: 192.168.1.10
+- **OPNsense**: 192.168.1.1
+- **DNS Server**: OPNsense Unbound (192.168.1.1)
+- **VPN**: WireGuard on OPNsense (10.10.0.0/24)
+- **Only public port**: 51820/UDP (WireGuard VPN)
+
+### Hostnames
+- `proxmox` → 192.168.1.10
+- `opnsense` → 192.168.1.1
+- VMs use descriptive hostnames (e.g., `ubuntu-vm`, `gpu-vm`)
+
+### User Accounts
+- Primary user: `jcuffney`
+- SSH keys: `~/.ssh/id_ed25519`
+- User has sudo access with NOPASSWD on VMs
+
+## Terraform Conventions
+
+### Provider
+- **Provider**: `telmate/proxmox` (version 3.0.2-rc07 or later)
+- **API URL**: `https://192.168.1.10:8006/api2/json`
+- **Authentication**: Token-based (preferred) or password
+
+### File Structure
+- `main.tf` - Main VM resource definitions
+- `variables.tf` - Variable declarations
+- `terraform.tfvars` - Variable values (gitignored)
+- `terraform.tfvars.example` - Example variables template
+- `outputs.tf` - Output values (IP addresses, SSH commands)
+
+### VM Configuration
+- Use Proxmox provider 3.0 syntax (cpu block, disks block, network block)
+- Cloud-init for VM provisioning
+- DHCP for IP assignment (static IPs configured via cloud-init if needed)
+- VM templates: Clone from Ubuntu cloud image templates
+
+### Best Practices
+- Always use `terraform.tfvars.example` as template
+- Never commit `terraform.tfvars` (contains secrets)
+- Use lifecycle blocks to ignore changes to network/disk when needed
+- Include helpful outputs (IP addresses, SSH commands)
+
+## VM Configuration Standards
+
+### Cloud-Init
+- Hostname set in cloud-init.yaml
+- SSH keys configured for root and jcuffney users
+- jcuffney user with sudo NOPASSWD access
+- Docker and docker-compose installed for container workloads
+- Dotfiles injected via Terraform (bashrc, bash_aliases, profile)
+
+### Dotfiles
+- Stored in `vms/<vm-name>/dotfiles/`
+- Injected into VMs via Terraform cloud-init
+- Custom bash prompt: `user@hostname <path> <git-branch>`
+- Applied to both root and jcuffney users
+
+### Network
+- VMs use `vmbr0` bridge (default Proxmox bridge)
+- DHCP for IP assignment
+- DNS: 192.168.1.1 (OPNsense/Unbound)
+
+## Security Guidelines
+
+### Critical Rules
+1. **NO services exposed to public internet** - Only WireGuard VPN (port 51820/UDP)
+2. **NO port forwarding** for HTTP (80), HTTPS (443), or any service ports
+3. **All remote access via VPN only**
+4. **WAN firewall blocks all inbound except WireGuard**
+
+### SSH Configuration
+- Use SSH keys (ed25519 preferred)
+- SSH config file: `~/.ssh/config` with hostname entries
+- Hostnames resolve via OPNsense Unbound DNS
+- Works both locally and via VPN
+
+### TLS/SSL
+- Use DNS-01 challenge for Let's Encrypt (no public ports needed)
+- Self-signed certificates acceptable for internal use
+- Traefik or Nginx Proxy Manager for reverse proxy
+
+## Documentation Standards
+
+### Documentation Structure
+- **README.md** - Overview and quick reference
+- **Detailed guides** - Step-by-step instructions
+- **Implementation tasks** - Ordered, testable tasks
+- **Code comments** - Explain Terraform configurations
+
+### Writing Style
+- Clear, step-by-step instructions
+- Include test/verification steps
+- Show expected results
+- Provide troubleshooting sections
+- Use code blocks for commands and configs
+
+## Code Style
+
+### Terraform
+- Use consistent indentation (2 spaces)
+- Group related resources
+- Use meaningful variable names
+- Include descriptions for variables and resources
+- Use locals for complex expressions
+
+### Shell Scripts
+- Use bash with `set -euo pipefail` for error handling
+- Include shebang: `#!/bin/bash`
+- Add comments explaining complex logic
+- Use meaningful variable names
+
+### YAML (cloud-init, docker-compose)
+- Use 2-space indentation
+- Include comments for clarity
+- Follow cloud-init best practices
+- Validate YAML syntax
+
+## Common Tasks
+
+### Creating a New VM
+1. Create directory: `vms/<vm-name>/`
+2. Copy structure from `vms/ubuntu/` as template
+3. Create `cloud-init.yaml` with VM-specific config
+4. Create `terraform/` directory with Terraform files
+5. Add DNS override in OPNsense for hostname
+6. Add SSH config entry for easy access
+7. Document in appropriate README
+
+### Updating DNS
+- Add DNS overrides in OPNsense: Services → Unbound DNS → Overrides
+- Use short hostnames (e.g., `proxmox`, not `proxmox.local`)
+- Update SSH config if needed
+
+### Network Changes
+- Always verify firewall rules
+- Test from VPN to ensure access works
+- Verify services NOT accessible from public internet
+- Document changes in networking documentation
+
+## Testing Requirements
+
+### Before Committing
+- Terraform: `terraform validate` and `terraform plan`
+- YAML: Validate syntax
+- Documentation: Check links and code blocks
+
+### After Deployment
+- Verify DNS resolution works
+- Test SSH access using hostnames
+- Verify VPN access (if applicable)
+- Test service accessibility
+- Verify security (services NOT public)
+
+## Important Notes
+
+- **terraform.tfvars** is gitignored - never commit secrets
+- Always use example files as templates
+- Backup OPNsense configuration before major changes
+- Test changes incrementally
+- Document deviations from standard procedures
+- Keep networking documentation up to date
+
+## AI Assistant Guidelines
+
+When helping with this project:
+1. **Respect security model** - Never suggest exposing services publicly
+2. **Use hostnames** - Prefer `proxmox` over `192.168.1.10` in examples
+3. **Follow structure** - Maintain existing directory and file organization
+4. **Include tests** - Always provide verification steps
+5. **Document changes** - Update relevant README files
+6. **Check existing docs** - Reference networking-plan.md and implementation-tasks.md
+7. **Use Terraform 3.0 syntax** - Provider 3.0+ syntax for Proxmox resources
+8. **Consider VPN access** - Solutions should work via VPN when applicable
+
+## Common Commands Reference
+
+```bash
+# SSH to hosts
+ssh jcuffney@proxmox
+ssh jcuffney@opnsense
+ssh jcuffney@ubuntu-vm
+
+# Terraform
+cd vms/<vm-name>/terraform
+terraform init
+terraform plan
+terraform apply
+
+# DNS testing
+nslookup proxmox
+dig @192.168.1.1 proxmox
+
+# VPN testing (when connected)
+ping proxmox
+ssh jcuffney@proxmox
+```

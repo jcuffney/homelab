@@ -1,4 +1,4 @@
-# Ubuntu VM
+# Ubuntu Base VM
 
 > Minimal Ubuntu VM for general purpose projects
 
@@ -119,42 +119,56 @@ terraform destroy
 
 **IMPORTANT:** Cloud-init requires a cloud image (`.img` file), not a live server ISO (`.iso` file).
 
-Before deploying, ensure you have an Ubuntu 24.04 **cloud image** uploaded to Proxmox storage:
+**How it works:** The cloud image is uploaded to Proxmox **once**, then a template is created from it **once**. When Terraform runs, it clones from the existing template in Proxmox - **no download happens**. The template is reused for all future VMs.
 
-1. **Download Ubuntu 24.04 cloud image:**
+#### One-Time Setup: Create Cloud-Init Template
+
+1. **Download Ubuntu 24.04 cloud image (one time):**
    - Go to: https://cloud-images.ubuntu.com/
    - Download: `ubuntu-24.04-server-cloudimg-amd64.img` (or latest 24.04 cloud image)
    - **Do not use** live server ISOs - they won't work with cloud-init
 
-2. **Upload to Proxmox:**
+2. **Upload to Proxmox (one time):**
    - **Datacenter** → **Node** → **Storage** → **local** (or your ISO storage) → **ISO Images** → **Upload**
    - Upload the `.img` file
 
-3. **After `terraform apply` - Attach Cloud Image for First Boot:**
+3. **Create Template from Cloud Image (one time):**
    
-   The VM will be created but won't have a bootable image. You need to attach it manually:
-   
-   - Go to Proxmox UI → Find your VM (`ubuntu-vm`, ID 200)
-   - Click **Hardware** tab
-   - Click **Add** → **CD/DVD Drive**
-   - Select your cloud image: `ubuntu-24.04-server-cloudimg-amd64.img`
-   - Click **Add**
-   - Go to **Options** tab → **Boot Order**
-   - Move **CD/DVD** to the top of the boot order
-   - Click **OK**
-   - Start the VM (if not already running)
-   
-   The VM should now boot from the cloud image and cloud-init will configure it.
-
-4. **Alternative: Create a Template (Recommended for Multiple VMs):**
-   
-   To avoid manually attaching the image each time:
-   
-   - Create a VM manually in Proxmox UI with the cloud image attached
-   - Boot it once to verify it works
+   - In Proxmox UI, create a new VM manually:
+     - **Datacenter** → **Create VM**
+     - Set VM ID, name (e.g., "ubuntu-24.04-template")
+     - **OS**: Don't use any media (we'll attach the cloud image)
+     - **System**: BIOS = SeaBIOS, Machine = Default (i440fx)
+     - **Disks**: Create a small disk (will be replaced)
+     - **CPU/Memory**: Minimal (1 core, 512MB is fine for template)
+   - After VM creation:
+     - Go to **Hardware** → **Unused Disk 0** → **Edit** → **Delete** (remove the default disk)
+     - Go to **Hardware** → **Add** → **Hard Disk**
+     - **Storage**: Select where you uploaded the cloud image
+     - **Bus/Device**: IDE, **Device**: 0
+     - **Disk size**: Match the cloud image size (or slightly larger)
+     - **Format**: raw
+     - Click **Add**
+   - Go to **Options** → **Boot Order** → Move **IDE0** to top
+   - Start the VM and let it boot once (verify it works)
+   - Stop the VM
    - Right-click the VM → **Convert to Template**
-   - Update `terraform.tfvars`: `vm_template = "your-template-name"`
-   - Future `terraform apply` will clone from the template automatically
+   - Note the template name (e.g., "ubuntu-24.04-template")
+
+4. **Configure Terraform to use the template:**
+   
+   - Edit `terraform/terraform.tfvars`
+   - Uncomment and set: `vm_template = "your-template-name"`
+   - Example: `vm_template = "ubuntu-24.04-template"`
+
+#### Deploying VMs
+
+After the template is created, each `terraform apply` will:
+- Clone from the existing template in Proxmox (fast, no download)
+- Apply your cloud-init configuration
+- Create a new VM ready to use
+
+The template stays in Proxmox storage and is reused for all future VMs.
 
 ### User Access
 

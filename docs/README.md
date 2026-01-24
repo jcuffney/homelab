@@ -15,3 +15,5 @@
 ## LXM's
 
 - [ ] Home Assistant
+- [ ] gym bot
+- [ ] trading bot
