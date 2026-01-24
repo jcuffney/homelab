@@ -1,0 +1,26 @@
+#cloud-config
+
+hostname: ubuntu-vm
+
+# SSH keys for root user
+ssh_authorized_keys:
+  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHPbbBr45lG6kPU6Ii7T4Td79CibnKkXMpaOCT5kJpZx josephcuffney@gmail.com
+
+# Create jcuffney user with root permissions
+users:
+  - name: jcuffney
+    groups: sudo, docker
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHPbbBr45lG6kPU6Ii7T4Td79CibnKkXMpaOCT5kJpZx josephcuffney@gmail.com
+
+packages:
+  - docker.io
+  - docker-compose
+  - curl
+  - wget
+  - git
+
+# Note: Dotfiles (.bashrc, .bash_aliases, .profile) are injected by Terraform
+# from the VM-specific dotfiles/ directory. See terraform/main.tf for details.

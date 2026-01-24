@@ -19,7 +19,7 @@ This VM is deployed programmatically using Terraform for deterministic spin up/d
 
 1. **Terraform** installed (version >= 1.0)
 2. **Proxmox API access** configured
-3. **GPU PCI device ID** identified on Proxmox host
+3. **Ubuntu 24.04 cloud image** uploaded to Proxmox storage (default expects `ubuntu-24.04-server-cloudimg-amd64.img`)
 4. **Proxmox host requirements:**
    - IOMMU enabled in BIOS/UEFI
    - IOMMU enabled in kernel (`intel_iommu=on` or `amd_iommu=on`)
@@ -28,25 +28,9 @@ This VM is deployed programmatically using Terraform for deterministic spin up/d
 
 ### Authentication Setup
 
-#### Option 1: Environment Variables (Recommended for CI/CD)
+**Only authentication is required** - all other values have sensible defaults (API URL, user, VM ID, GPU device ID, etc.).
 
-Set the following environment variables:
-
-```bash
-export PM_API_URL="https://proxmox.example.com:8006/api2/json"
-export PM_USER="root@pam"
-export PM_PASS="your-password"
-```
-
-Or use API tokens (recommended for security):
-
-```bash
-export PM_API_URL="https://proxmox.example.com:8006/api2/json"
-export PM_API_TOKEN_ID="terraform@pve!terraform-token"
-export PM_API_TOKEN_SECRET="your-token-secret"
-```
-
-#### Option 2: terraform.tfvars (For Local Development)
+#### Option 1: terraform.tfvars (Recommended for Local Development)
 
 1. Copy the example file:
    ```bash
@@ -54,9 +38,33 @@ export PM_API_TOKEN_SECRET="your-token-secret"
    cp terraform.tfvars.example terraform.tfvars
    ```
 
-2. Edit `terraform.tfvars` and fill in your Proxmox credentials and VM configuration.
+2. Edit `terraform.tfvars` and uncomment **only** the authentication method you want to use:
+
+   **Password authentication:**
+   ```hcl
+   proxmox_password = "your-password-here"
+   ```
+   Uses defaults: `proxmox_api_url = "https://192.168.1.10:8006/api2/json"`, `proxmox_user = "root@pam"`
+
+   **OR Token authentication (recommended):**
+   ```hcl
+   proxmox_token_id     = "root@pam!terraform-token"
+   proxmox_token_secret = "your-token-secret-here"
+   ```
+   Uses default: `proxmox_api_url = "https://192.168.1.10:8006/api2/json"`
 
 **Note:** `terraform.tfvars` is gitignored to keep secrets out of version control.
+
+#### Option 2: Environment Variables (For CI/CD)
+
+Set environment variables (note: provider uses `PM_*` as fallback, so use `terraform.tfvars` for `PROXMOX_*` variables):
+
+```bash
+export PM_PASS="your-password"
+# OR
+export PM_API_TOKEN_ID="root@pam!terraform-token"
+export PM_API_TOKEN_SECRET="your-token-secret"
+```
 
 ### Creating Proxmox API Tokens
 
@@ -71,27 +79,27 @@ export PM_API_TOKEN_SECRET="your-token-secret"
 5. Copy the **Secret** value (only shown once)
 6. Grant the user appropriate permissions (VM creation, etc.)
 
-### Finding GPU PCI Device ID
+### Default Values
 
-On your Proxmox host, run:
+The following values have sensible defaults and don't need to be configured:
 
-```bash
-# List all PCI devices
-lspci | grep -i vga
+- `proxmox_api_url` = `"https://192.168.1.10:8006/api2/json"`
+- `proxmox_user` = `"root@pam"`
+- `proxmox_target_node` = `"numenor"`
+- `vm_id` = `100`
+- `vm_name` = `"rivendell"`
+- `vm_cpu_cores` = `12`
+- `vm_memory_mb` = `32768` (32 GB)
+- `vm_disk_size_gb` = `750`
+- `vm_storage_pool` = `"local-lvm"`
+- `vm_iso_storage_pool` = `"local"`
+- `gpu_device_id` = `"0000:3b:00.0"` (defaults to user's GPU)
+- `gpu_rombar` = `0`
+- `gpu_x_vga` = `1`
+- `network_bridge` = `"vmbr0"`
+- `vm_cloud_image` = `"ubuntu-24.04-server-cloudimg-amd64.img"`
 
-# Or get detailed info with device IDs
-lspci -nn | grep -i vga
-
-# Or for NVIDIA specifically
-lspci | grep -i nvidia
-```
-
-The output will show something like:
-```
-01:00.0 VGA compatible controller: NVIDIA Corporation ...
-```
-
-Use `0000:01:00.0` as your `gpu_device_id` in `terraform.tfvars` (add `0000:` prefix).
+**To override any default**, set the variable in `terraform.tfvars` or use `-var` flags with `terraform apply`.
 
 ### Spin Up VM
 
@@ -133,21 +141,24 @@ After deployment, SSH into the VM and verify:
    curl http://localhost:32400/web
    ```
 
-### Configuration
+### Cloud Image Setup
 
-All VM specifications are configurable via variables in `terraform/terraform.tfvars`:
+**IMPORTANT:** Cloud-init requires a cloud image (`.img` file), not a live server ISO (`.iso` file).
 
-- `vm_cpu_cores` - Number of CPU cores (default: 4)
-- `vm_memory_mb` - RAM in MB (default: 8192)
-- `vm_disk_size_gb` - Disk size in GB (default: 100)
-- `gpu_device_id` - PCI device ID for GPU passthrough
-- `gpu_rombar` - ROM bar setting (0 or 1, default 0)
-- `gpu_x_vga` - Enable X-VGA (0 or 1, default 1)
-- `network_bridge` - Network bridge name (default: vmbr0)
-- `vm_storage_pool` - Storage pool for VM disk (default: local-lvm)
-- `vm_iso_storage_pool` - Storage pool for cloud-init ISO (default: local)
+Before deploying, ensure you have an Ubuntu 24.04 **cloud image** uploaded to Proxmox storage:
 
-See `terraform/terraform.tfvars.example` for all available options.
+1. **Download Ubuntu 24.04 cloud image:**
+   - Go to: https://cloud-images.ubuntu.com/
+   - Download: `ubuntu-24.04-server-cloudimg-amd64.img` (or latest 24.04 cloud image)
+   - **Do not use** live server ISOs - they won't work with cloud-init
+
+2. **Upload to Proxmox:**
+   - **Datacenter** → **Node** → **Storage** → **local** (or your ISO storage) → **ISO Images** → **Upload**
+   - Upload the `.img` file
+
+3. **Verify filename:**
+   - The default expects: `ubuntu-24.04-server-cloudimg-amd64.img`
+   - If your image has a different name, set `vm_cloud_image` in `terraform.tfvars`
 
 ### User Access
 

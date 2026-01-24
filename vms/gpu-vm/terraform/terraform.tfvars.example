@@ -1,38 +1,50 @@
-# Proxmox Connection
-# Option 1: Use environment variables (recommended)
-# Set PM_API_URL, PM_USER, and either PM_PASS or PM_API_TOKEN_ID + PM_API_TOKEN_SECRET
+# Minimal Required Configuration
+# Only authentication is required - all other values have sensible defaults
 
-# Option 2: Uncomment and fill in these variables
+# Proxmox Authentication (choose one method)
+
+# Option 1: Password Authentication
+# Uncomment and fill in:
+# proxmox_password = "your-password-here"
+# Uses defaults: proxmox_api_url = "https://192.168.1.10:8006/api2/json", proxmox_user = "root@pam"
+
+# Option 2: API Token Authentication (Recommended)
+# Uncomment and fill in:
+# proxmox_token_id     = "root@pam!terraform-token"
+# proxmox_token_secret = "your-token-secret-here"
+# Uses default: proxmox_api_url = "https://192.168.1.10:8006/api2/json"
+
+# ============================================
+# Optional: Override Defaults
+# ============================================
+# All values below have sensible defaults and don't need to be set unless you want to override them
+
+# Proxmox Connection (if different from defaults)
 # proxmox_api_url = "https://proxmox.example.com:8006/api2/json"
 # proxmox_user    = "root@pam"
-# proxmox_password = "your-password-here"
-# OR use token-based auth:
-# proxmox_token_id     = "terraform@pve!terraform-token"
-# proxmox_token_secret = "your-token-secret-here"
+# proxmox_target_node = "numenor"  # Change to your actual Proxmox node name
 
-# Allow insecure TLS (only for self-signed certificates)
-# proxmox_insecure = false
+# VM Configuration (defaults: vm_id=100, vm_name="rivendell", vm_cpu_cores=12, vm_memory_mb=32768, vm_disk_size_gb=750)
+# vm_id          = 100
+# vm_name        = "rivendell"
+# vm_cpu_cores   = 12
+# vm_memory_mb   = 32768
+# vm_disk_size_gb = 750
 
-# VM Configuration
-vm_id          = 100
-vm_name        = "numenor"
-vm_cpu_cores   = 4
-vm_memory_mb   = 8192
-vm_disk_size_gb = 100
+# Storage Configuration (defaults: vm_storage_pool="local-lvm", vm_iso_storage_pool="local")
+# vm_storage_pool     = "local-lvm"
+# vm_iso_storage_pool = "local"
 
-# Storage Configuration
-vm_storage_pool     = "local-lvm"
-vm_iso_storage_pool = "local"
+# GPU Configuration (defaults: gpu_device_id="0000:3b:00.0", gpu_rombar=0, gpu_x_vga=1)
+# gpu_device_id = "0000:3b:00.0"
+# gpu_rombar    = 0
+# gpu_x_vga     = 1
 
-# GPU Passthrough Configuration
-# Find your GPU device ID with: lspci | grep -i vga
-# Or: lspci -nn | grep -i vga
-gpu_device_id = "0000:01:00.0"  # Change this to your GPU's PCI device ID
-gpu_rombar    = 0                # 0 for passthrough, 1 to enable ROM bar
-gpu_x_vga     = 1                # 1 if this is the primary GPU, 0 otherwise
+# Cloud Image (default: "ubuntu-24.04-server-cloudimg-amd64.img")
+# IMPORTANT: Must be a cloud image (.img file), not a live server ISO
+# Download from: https://cloud-images.ubuntu.com/
+# Upload to Proxmox: Datacenter → Node → Storage → ISO Images
+# vm_cloud_image = "ubuntu-24.04-server-cloudimg-amd64.img"
 
-# Network Configuration
-network_bridge = "vmbr0"
-
-# Proxmox Node (change to your node name)
-proxmox_target_node = "pve"
+# Network Configuration (default: network_bridge="vmbr0")
+# network_bridge = "vmbr0"

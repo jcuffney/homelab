@@ -1,9 +1,9 @@
 #cloud-config
 
 # I name all my VMs after places in Middle Earth.
-# numinora is the capital of Gondor. It is the seat of Gondor's power and wisdom.
+# Rivendell is the Elven realm, a place of wisdom and refuge.
 # Since the GPU is assigned to this VM and it's got a lot of compute power, it's a fitting name.
-hostname: numenor
+hostname: rivendell
 
 # SSH keys for root user
 ssh_authorized_keys:
