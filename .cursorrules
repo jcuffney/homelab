@@ -1,0 +1,47 @@
+# Homelab Naming Convention
+
+## Hardware/Host Naming: Dual Naming System (REQUIRED)
+
+**IMPORTANT**: All hardware and hosts **MUST** have **BOTH** a descriptive (declarative) hostname AND a themed Middle Earth hostname. This is not optional - both names must be configured.
+
+### Naming Strategy
+
+- **Descriptive/Declarative names** (REQUIRED): Functional/technical names that describe what the host is or does (e.g., `opnsense`, `proxmox`, `ubuntu-vm`, `docker-host`)
+- **Themed names** (REQUIRED): Middle Earth place names from J.R.R. Tolkien's works (e.g., `shire`, `numenor`, `rivendell`, `gondor`)
+
+Both names resolve to the same IP address and can be used interchangeably. You must configure both.
+
+### Current Mappings
+
+- **OPNsense** (router/firewall):
+  - Descriptive: `opnsense` / `opnsense.cuffney.com`
+  - Themed: `shire` / `shire.cuffney.com`
+  - IP: `192.168.1.1`
+
+- **Proxmox** (virtualization host):
+  - Descriptive: `proxmox` / `proxmox.cuffney.com`
+  - Themed: `numenor` / `numenor.cuffney.com`
+  - IP: `192.168.1.10`
+
+### Guidelines
+
+- **REQUIRED**: Both descriptive AND themed names must be configured for every host
+- **REQUIRED**: Both names must be set up in DNS (Unbound overrides and Route 53)
+- When creating new hosts, VMs, or hardware:
+  1. **First**: Choose a descriptive/declarative name (what it is/does - e.g., `opnsense`, `proxmox`, `ubuntu-vm`)
+  2. **Second**: Choose a themed Middle Earth name (e.g., `shire`, `numenor`, `rivendell`)
+  3. **Third**: Configure BOTH names in DNS (4 DNS overrides total: short descriptive, FQDN descriptive, short themed, FQDN themed)
+  4. **Fourth**: Document both mappings in this file
+- Use lowercase hostnames (e.g., `shire`, `numenor`, `opnsense`, `proxmox`)
+- Middle Earth name examples:
+  - Rivendell, Gondor, Rohan, Mordor, Lothlorien, Mirkwood, Isengard, Minas Tirith, etc.
+- Never create a host with only one name - both are mandatory
+
+### Usage
+
+- **Both names must exist** - you cannot choose one or the other, both are required
+- Use themed names in personal/documentation contexts (e.g., `ssh jcuffney@shire.cuffney.com`)
+- Use descriptive names when clarity is important (troubleshooting, sharing configs, documentation)
+- Both work identically in SSH, DNS, and all network operations
+- Maintain both DNS records (descriptive and themed) for maximum flexibility
+- When documenting or sharing, you can reference either name, but both must be configured
