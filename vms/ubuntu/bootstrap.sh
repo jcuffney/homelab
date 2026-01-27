@@ -14,16 +14,6 @@ apt-get update -qq
 echo "📦 Installing zsh and dependencies..."
 apt-get install -y -qq zsh curl git
 
-# 3. Install starship prompt (optional but recommended)
-echo "⭐ Installing starship prompt..."
-if command -v starship &> /dev/null; then
-    echo "   Starship already installed, skipping..."
-else
-    curl -sS https://starship.rs/install.sh | sh -s -- -y > /dev/null 2>&1 || {
-        echo "   ⚠️  Warning: Failed to install starship, continuing without it..."
-    }
-fi
-
 # 4. Copy dotfiles to appropriate locations
 echo "📝 Configuring dotfiles..."
 
@@ -83,4 +73,3 @@ echo ""
 echo "Next steps:"
 echo "  - SSH into the VM: ssh jcuffney@<vm-ip>"
 echo "  - Verify zsh is working: echo \$SHELL"
-echo "  - Check starship: starship --version"

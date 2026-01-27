@@ -1,0 +1,58 @@
+{
+  "mcpServers": {
+    "asana": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-asana"
+      ],
+      "env": {
+        "ASANA_ACCESS_TOKEN": "${ASANA_ACCESS_TOKEN}"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    },
+    "aws": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@aws-sdk/mcp-server-aws"
+      ],
+      "env": {
+        "AWS_ACCESS_KEY_ID": "${AWS_ACCESS_KEY_ID}",
+        "AWS_SECRET_ACCESS_KEY": "${AWS_SECRET_ACCESS_KEY}",
+        "AWS_REGION": "${AWS_REGION:-us-east-1}"
+      }
+    },
+    "proxmox": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-proxmox"
+      ],
+      "env": {
+        "PROXMOX_HOST": "https://192.168.1.10:8006",
+        "PROXMOX_TOKEN_ID": "${PROXMOX_TOKEN_ID}",
+        "PROXMOX_TOKEN_SECRET": "${PROXMOX_TOKEN_SECRET}"
+      }
+    },
+    "opnsense": {
+      "command": "uvx",
+      "args": [
+        "opnsense-mcp-server"
+      ],
+      "env": {
+        "OPNSENSE_URL": "https://192.168.1.1",
+        "OPNSENSE_API_KEY": "${OPNSENSE_API_KEY}",
+        "OPNSENSE_API_SECRET": "${OPNSENSE_API_SECRET}"
+      }
+    }
+  }
+}

@@ -23,6 +23,11 @@ Both names resolve to the same IP address and can be used interchangeably. You m
   - Themed: `numenor` / `numenor.cuffney.com`
   - IP: `192.168.1.10`
 
+- **Ubuntu VM** (general-purpose VM):
+  - Descriptive: `ubuntu-vm` / `ubuntu-vm.cuffney.com`
+  - Themed: `gondolin` / `gondolin.cuffney.com`
+  - IP: TBD (DHCP)
+
 ### Guidelines
 
 - **REQUIRED**: Both descriptive AND themed names must be configured for every host
@@ -34,7 +39,7 @@ Both names resolve to the same IP address and can be used interchangeably. You m
   4. **Fourth**: Document both mappings in this file
 - Use lowercase hostnames (e.g., `shire`, `numenor`, `opnsense`, `proxmox`)
 - Middle Earth name examples:
-  - Rivendell, Gondor, Rohan, Mordor, Lothlorien, Mirkwood, Isengard, Minas Tirith, etc.
+  - Rivendell, Gondor, Rohan, Mordor, Lothlorien, Mirkwood, Isengard, Minas Tirith, Gondolin, etc.
 - Never create a host with only one name - both are mandatory
 
 ### Usage

@@ -27,17 +27,12 @@ setopt CORRECT
 setopt COMPLETE_IN_WORD
 setopt ALWAYS_TO_END
 
-# Initialize starship prompt if available
-if command -v starship &> /dev/null; then
-    eval "$(starship init zsh)"
-else
-    # Fallback prompt if starship is not installed
-    autoload -Uz vcs_info
-    precmd() { vcs_info }
-    zstyle ':vcs_info:git:*' formats ' on %b'
-    setopt PROMPT_SUBST
-    PROMPT='%n@%m %~${vcs_info_msg_0_} $ '
-fi
+# Simple prompt with git branch support
+autoload -Uz vcs_info
+precmd() { vcs_info }
+zstyle ':vcs_info:git:*' formats ' on %b'
+setopt PROMPT_SUBST
+PROMPT='%n@%m %~${vcs_info_msg_0_} $ '
 
 # Enable completion
 autoload -Uz compinit
