@@ -1,245 +1,171 @@
-# Ubuntu Base VM
+# Ubuntu VM Template
 
-> Minimal Ubuntu VM for general purpose projects
+> Declarative Ubuntu VM template with zsh, shared dotfiles, and S3 backend support
 
-## Overview
-
-This is a minimal Ubuntu VM setup that can be deployed programmatically using Terraform. It provides a clean, configured Ubuntu environment with Docker, SSH access, and custom shell configuration.
-
-## Features Included
-
-- **jcuffney user** with sudo and docker group access
-- **Docker and docker-compose** pre-installed
-- **SSH key access** configured for root and jcuffney users
-- **Custom bash prompt**: `user@hostname <file path> <if git directory - on branch_name>`
-- **Standard dotenv files** (.bashrc, .bash_aliases, .profile) for both root and jcuffney users
-  - Dotfiles are VM-specific and stored in `dotfiles/` directory
-
-## Base OS
-
-`Ubuntu 24 LTS`
-
-## Deployment
-
-This VM is deployed programmatically using Terraform for deterministic spin up/down.
+## Quick Start
 
 ### Prerequisites
 
-1. **Terraform** installed (version >= 1.0)
-2. **Proxmox API access** configured
-3. **Ubuntu 24.04 cloud image** uploaded to Proxmox storage (default expects `ubuntu-24.04-server-cloudimg-amd64.img`)
+- Terraform >= 1.0
+- Proxmox API access
+- AWS credentials (if using S3 backend)
+- SSH key for VM provisioning
 
-### Authentication Setup
-
-**Only authentication is required** - all other values have sensible defaults (API URL, user, VM ID, etc.).
-
-#### Option 1: terraform.tfvars (Recommended for Local Development)
-
-1. Copy the example file:
-   ```bash
-   cd terraform
-   cp terraform.tfvars.example terraform.tfvars
-   ```
-
-2. Edit `terraform.tfvars` and uncomment **only** the authentication method you want to use:
-
-   **Password authentication:**
-   ```hcl
-   proxmox_password = "your-password-here"
-   ```
-   Uses defaults: `proxmox_api_url = "https://192.168.1.10:8006/api2/json"`, `proxmox_user = "root@pam"`
-
-   **OR Token authentication (recommended):**
-   ```hcl
-   proxmox_token_id     = "root@pam!terraform-token"
-   proxmox_token_secret = "your-token-secret-here"
-   ```
-   Uses default: `proxmox_api_url = "https://192.168.1.10:8006/api2/json"`
-
-**Note:** `terraform.tfvars` is gitignored to keep secrets out of version control.
-
-#### Option 2: Environment Variables (For CI/CD)
-
-Set environment variables (note: provider uses `PM_*` as fallback, so use `terraform.tfvars` for `PROXMOX_*` variables):
-
-```bash
-export PM_PASS="your-password"
-# OR
-export PM_API_TOKEN_ID="root@pam!terraform-token"
-export PM_API_TOKEN_SECRET="your-token-secret"
-```
-
-### Creating Proxmox API Tokens
-
-1. Log into Proxmox web interface
-2. Go to **Datacenter** → **Permissions** → **API Tokens**
-3. Click **Add** → **API Token**
-4. Set:
-   - **Token ID**: e.g., `terraform@pve!terraform-token`
-   - **User**: Select a user (create one if needed, e.g., `terraform@pve`)
-   - **Privilege Separation**: Enable if you want separate permissions
-   - **Expiration**: Set as needed
-5. Copy the **Secret** value (only shown once)
-6. Grant the user appropriate permissions (VM creation, etc.)
-
-### Default Values
-
-The following values have sensible defaults and don't need to be configured:
-
-- `proxmox_api_url` = `"https://192.168.1.10:8006/api2/json"`
-- `proxmox_user` = `"root@pam"`
-- `proxmox_target_node` = `"numenor"`
-- `vm_id` = `200`
-- `vm_name` = `"ubuntu-vm"`
-- `vm_cpu_cores` = `2`
-- `vm_memory_mb` = `4096` (4 GB)
-- `vm_disk_size_gb` = `50`
-- `vm_storage_pool` = `"local-lvm"`
-- `network_bridge` = `"vmbr0"`
-
-**To override any default**, set the variable in `terraform.tfvars` or use `-var` flags with `terraform apply`.
-
-### Spin Up VM
+### 1. Create VM
 
 ```bash
 cd terraform
+
+# Copy and configure terraform.tfvars
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your Proxmox credentials
+
+# Initialize Terraform (configure S3 backend if using)
 terraform init
-terraform plan
+
+# Create the VM
 terraform apply
 ```
 
-### Spin Down VM
+### 2. Destroy VM
 
 ```bash
 cd terraform
 terraform destroy
 ```
 
-### Cloud Image Setup
+### 3. Fork VM Template
 
-**IMPORTANT:** Cloud-init requires a cloud image (`.img` file), not a live server ISO (`.iso` file).
+To create a new VM from this template:
 
-**How it works:** The cloud image is uploaded to Proxmox **once**, then a template is created from it **once**. When Terraform runs, it clones from the existing template in Proxmox - **no download happens**. The template is reused for all future VMs.
-
-#### One-Time Setup: Create Cloud-Init Template
-
-1. **Download Ubuntu 24.04 cloud image (one time):**
-   - Go to: https://cloud-images.ubuntu.com/
-   - Download: `ubuntu-24.04-server-cloudimg-amd64.img` (or latest 24.04 cloud image)
-   - **Do not use** live server ISOs - they won't work with cloud-init
-
-2. **Upload to Proxmox (one time):**
-   - **Datacenter** → **Node** → **Storage** → **local** (or your ISO storage) → **ISO Images** → **Upload**
-   - Upload the `.img` file
-
-3. **Create Template from Cloud Image (one time):**
-   
-   - In Proxmox UI, create a new VM manually:
-     - **Datacenter** → **Create VM**
-     - Set VM ID, name (e.g., "ubuntu-24.04-template")
-     - **OS**: Don't use any media (we'll attach the cloud image)
-     - **System**: BIOS = SeaBIOS, Machine = Default (i440fx)
-     - **Disks**: Create a small disk (will be replaced)
-     - **CPU/Memory**: Minimal (1 core, 512MB is fine for template)
-   - After VM creation:
-     - Go to **Hardware** → **Unused Disk 0** → **Edit** → **Delete** (remove the default disk)
-     - Go to **Hardware** → **Add** → **Hard Disk**
-     - **Storage**: Select where you uploaded the cloud image
-     - **Bus/Device**: IDE, **Device**: 0
-     - **Disk size**: Match the cloud image size (or slightly larger)
-     - **Format**: raw
-     - Click **Add**
-   - Go to **Options** → **Boot Order** → Move **IDE0** to top
-   - Start the VM and let it boot once (verify it works)
-   - Stop the VM
-   - Right-click the VM → **Convert to Template**
-   - Note the template name (e.g., "ubuntu-24.04-template")
-
-4. **Configure Terraform to use the template:**
-   
-   - Edit `terraform/terraform.tfvars`
-   - Uncomment and set: `vm_template = "your-template-name"`
-   - Example: `vm_template = "ubuntu-24.04-template"`
-
-#### Deploying VMs
-
-After the template is created, each `terraform apply` will:
-- Clone from the existing template in Proxmox (fast, no download)
-- Apply your cloud-init configuration
-- Create a new VM ready to use
-
-The template stays in Proxmox storage and is reused for all future VMs.
-
-### User Access
-
-The VM is configured with two users:
-
-- **root** - Standard root user with SSH key access
-- **jcuffney** - User with root-equivalent permissions (`sudo: ALL=(ALL) NOPASSWD:ALL`) and docker group access
-
-Both users share the same SSH public key configured in cloud-init.
-
-### Shell Configuration
-
-Both root and jcuffney users have custom shell configuration:
-
-- **Custom bash prompt**: Shows `user@hostname <file path> <if git directory - on branch_name>`
-- **Standard dotenv files**: `.bashrc`, `.bash_aliases`, and `.profile` are pre-configured
-- **Git integration**: Prompt automatically shows current git branch when in a git repository
-
-### Verification
-
-After deployment, SSH into the VM and verify:
-
-1. **VM is running:**
+1. **Copy the ubuntu directory:**
    ```bash
-   ssh jcuffney@<vm-ip>
-   # or
-   ssh root@<vm-ip>
+   cd ../..
+   cp -r vms/ubuntu vms/my-new-vm
    ```
 
-2. **Docker is installed:**
+2. **Update VM-specific files:**
+   - Edit `vms/my-new-vm/cloud-init.yaml` - Change hostname
+   - Edit `vms/my-new-vm/terraform/variables.tf` - Update default `vm_id` and `vm_name`
+   - Edit `vms/my-new-vm/terraform/main.tf` - Update S3 backend key path if using S3
+
+3. **Configure and deploy:**
    ```bash
-   docker --version
-   docker-compose --version
+   cd vms/my-new-vm/terraform
+   cp terraform.tfvars.example terraform.tfvars
+   # Edit terraform.tfvars
+   terraform init
+   terraform apply
    ```
 
-3. **Custom prompt is working:**
-   ```bash
-   # Should show: user@hostname /current/path $
-   # If in git repo: user@hostname /current/path on branch_name $
-   ```
+## S3 Backend Setup (Optional but Recommended)
 
-4. **jcuffney user has sudo access:**
-   ```bash
-   sudo whoami
-   # Should output: root
-   ```
+For shared state across multiple machines or CI/CD:
 
-5. **jcuffney user can use docker:**
-   ```bash
-   docker ps
-   # Should work without sudo
-   ```
+### 1. Create S3 Bucket and DynamoDB Table
 
-### Troubleshooting
+```bash
+# Create S3 bucket
+aws s3 mb s3://your-terraform-state-bucket --region us-east-1
 
-#### VM won't start
-- Check Proxmox logs: `journalctl -u pve-cluster` on Proxmox host
-- Verify cloud image is uploaded correctly
-- Check VM configuration in Proxmox UI
+# Enable versioning
+aws s3api put-bucket-versioning \
+  --bucket your-terraform-state-bucket \
+  --versioning-configuration Status=Enabled
 
-#### Cloud-init not working
-- Check cloud-init logs: `journalctl -u cloud-init` in VM
-- Verify cloud-init ISO was created correctly in Proxmox
-- Check that dotenv files were created: `ls -la ~/.bashrc ~/.bash_aliases ~/.profile`
+# Create DynamoDB table for state locking
+aws dynamodb create-table \
+  --table-name terraform-state-lock \
+  --attribute-definitions AttributeName=LockID,AttributeType=S \
+  --key-schema AttributeName=LockID,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST \
+  --region us-east-1
+```
 
-#### SSH access not working
-- Verify SSH keys are correct in cloud-init.yaml
-- Check that cloud-init completed: `cloud-init status`
-- Verify network connectivity to VM
+### 2. Configure AWS Credentials
 
-#### Docker not accessible
-- Verify jcuffney user is in docker group: `groups`
-- May need to log out and back in for group changes to take effect
-- Check Docker service is running: `sudo systemctl status docker`
+Set environment variables (or use AWS CLI default profile):
+
+```bash
+export AWS_ACCESS_KEY_ID="your-access-key"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
+# Optional for temporary credentials:
+export AWS_SESSION_TOKEN="your-session-token"
+```
+
+### 3. Enable S3 Backend in Terraform
+
+**Option A: Edit main.tf directly**
+
+Uncomment and configure the S3 backend block in `terraform/main.tf`:
+
+```hcl
+backend "s3" {
+  bucket         = "your-terraform-state-bucket"
+  key            = "vms/ubuntu/terraform.tfstate"
+  region         = "us-east-1"
+  dynamodb_table = "terraform-state-lock"
+  encrypt        = true
+}
+```
+
+**Option B: Use -backend-config flags**
+
+Keep backend commented in main.tf, then:
+
+```bash
+terraform init \
+  -backend-config="bucket=your-terraform-state-bucket" \
+  -backend-config="region=us-east-1" \
+  -backend-config="dynamodb_table=terraform-state-lock"
+```
+
+## Features
+
+- **ZSH shell** with starship prompt
+- **Shared dotfiles** from `../../dotfiles/` (applied to all VMs)
+- **jcuffney user** with sudo NOPASSWD and docker group
+- **SSH key access** configured automatically
+- **Docker and docker-compose** pre-installed
+- **S3 backend** support for shared state
+
+## Configuration
+
+### Required
+
+- Proxmox authentication (token or password) in `terraform.tfvars`
+- Proxmox template name (set `vm_template` variable)
+
+### Optional
+
+- S3 backend configuration (see S3 Backend Setup above)
+- SSH key path override (`ssh_private_key_path` variable, default: `~/.ssh/id_ed25519`)
+
+## VM Access
+
+After creation, SSH into the VM:
+
+```bash
+# Get VM IP from Terraform output
+terraform output vm_ip_address
+
+# SSH as jcuffney user
+ssh jcuffney@<vm-ip>
+```
+
+## Troubleshooting
+
+**VM not accessible via SSH:**
+- Wait a few minutes for cloud-init to complete
+- Check Proxmox console for boot errors
+- Verify SSH key is correct in `cloud-init.yaml`
+
+**Bootstrap script fails:**
+- Check VM logs: `journalctl -u cloud-init`
+- Verify dotfiles exist in `../../dotfiles/`
+- Manually run: `ssh root@<vm-ip> /tmp/bootstrap.sh`
+
+**S3 backend errors:**
+- Verify AWS credentials are set
+- Check bucket and DynamoDB table exist
+- Ensure IAM permissions allow read/write access

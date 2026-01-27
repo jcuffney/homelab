@@ -1,0 +1,37 @@
+# ZSH Aliases for Homelab VMs
+# Shared across all VMs
+
+# Docker aliases
+alias d='docker'
+alias dc='docker-compose'
+alias dps='docker ps'
+alias dpsa='docker ps -a'
+alias di='docker images'
+alias dex='docker exec -it'
+alias dlog='docker logs'
+alias dstop='docker stop'
+alias dstart='docker start'
+alias drm='docker rm'
+alias drmi='docker rmi'
+
+# System aliases
+alias df='df -h'
+alias du='du -h'
+alias free='free -h'
+alias top='htop'  # If htop is installed
+
+# Network aliases
+alias ping='ping -c 5'
+alias ports='netstat -tulanp'
+
+# Git shortcuts
+alias gst='git status'
+alias gco='git checkout'
+alias gbr='git branch'
+alias gdiff='git diff'
+alias glog='git log --oneline --graph --decorate --all'
+
+# Quick edits
+alias zshrc='${EDITOR:-nano} ~/.zshrc'
+alias zshenv='${EDITOR:-nano} ~/.zshenv'
+alias zshaliases='${EDITOR:-nano} ~/.zsh_aliases'

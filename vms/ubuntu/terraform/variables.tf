@@ -101,3 +101,40 @@ variable "vm_template" {
   # 3. Boot and configure it
   # 4. Convert to template: Right-click VM → Convert to Template
 }
+
+# S3 Backend Configuration
+# These variables are used to configure the Terraform S3 backend for shared state
+# AWS credentials should be provided via environment variables:
+#   - AWS_ACCESS_KEY_ID
+#   - AWS_SECRET_ACCESS_KEY
+#   - AWS_SESSION_TOKEN (optional, for temporary credentials)
+
+variable "s3_backend_bucket" {
+  description = "S3 bucket name for Terraform state storage"
+  type        = string
+  default     = null
+  # Example: "my-terraform-state-bucket"
+}
+
+variable "s3_backend_region" {
+  description = "AWS region for S3 backend"
+  type        = string
+  default     = "us-east-1"
+  # Example: "us-east-1", "us-west-2", "eu-west-1"
+}
+
+variable "s3_backend_dynamodb_table" {
+  description = "DynamoDB table name for Terraform state locking"
+  type        = string
+  default     = null
+  # Example: "terraform-state-lock"
+}
+
+variable "ssh_private_key_path" {
+  description = "Path to SSH private key for VM provisioning (used by file and remote-exec provisioners). Can use ~ for home directory."
+  type        = string
+  default     = "~/.ssh/id_ed25519"
+  # Can be overridden in terraform.tfvars or via -var flag
+  # Example: "~/.ssh/id_ed25519" or "/Users/username/.ssh/id_ed25519"
+  # Note: ~ will be expanded to $HOME environment variable
+}

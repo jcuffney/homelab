@@ -22,9 +22,13 @@ terraform {
   #   }
   # }
 
-  # Option 2: S3 Backend (If you have AWS)
+  # Option 2: S3 Backend (Recommended for multi-machine/CI use)
   # Requires: S3 bucket and DynamoDB table for state locking
-  # Uncomment and configure:
+  # AWS credentials: Use environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+  # 
+  # To enable, uncomment and configure the backend block below, or use -backend-config flags:
+  #   terraform init -backend-config="bucket=your-bucket" -backend-config="region=us-east-1" -backend-config="dynamodb_table=your-table"
+  #
   # backend "s3" {
   #   bucket         = "your-terraform-state-bucket"
   #   key            = "vms/ubuntu/terraform.tfstate"
@@ -52,53 +56,10 @@ provider "proxmox" {
   pm_tls_insecure     = var.proxmox_insecure
 }
 
-# Read cloud-init.yaml and dotfiles
+# Read cloud-init.yaml
+# Dotfiles are now handled by bootstrap script via file provisioners
 locals {
   cloud_init_content = file("${path.module}/../cloud-init.yaml")
-  
-  # Read VM-specific dotfiles
-  dotfiles_bashrc      = file("${path.module}/../dotfiles/bashrc")
-  dotfiles_bash_aliases = file("${path.module}/../dotfiles/bash_aliases")
-  dotfiles_profile     = file("${path.module}/../dotfiles/profile")
-
-  # Inject dotfiles into cloud-init as write_files
-  # Dotfiles are VM-specific and stored in this VM's dotfiles directory
-  cloud_init_with_dotfiles = <<-EOT
-${local.cloud_init_content}
-write_files:
-  # Dotfiles for root user
-  - path: /root/.bashrc
-    content: |
-${indent(6, local.dotfiles_bashrc)}
-    owner: root:root
-    permissions: '0644'
-  - path: /root/.bash_aliases
-    content: |
-${indent(6, local.dotfiles_bash_aliases)}
-    owner: root:root
-    permissions: '0644'
-  - path: /root/.profile
-    content: |
-${indent(6, local.dotfiles_profile)}
-    owner: root:root
-    permissions: '0644'
-  # Dotfiles for jcuffney user
-  - path: /home/jcuffney/.bashrc
-    content: |
-${indent(6, local.dotfiles_bashrc)}
-    owner: jcuffney:jcuffney
-    permissions: '0644'
-  - path: /home/jcuffney/.bash_aliases
-    content: |
-${indent(6, local.dotfiles_bash_aliases)}
-    owner: jcuffney:jcuffney
-    permissions: '0644'
-  - path: /home/jcuffney/.profile
-    content: |
-${indent(6, local.dotfiles_profile)}
-    owner: jcuffney:jcuffney
-    permissions: '0644'
-EOT
 }
 
 # Create VM
@@ -144,8 +105,8 @@ resource "proxmox_vm_qemu" "ubuntu_vm" {
     bridge = var.network_bridge
   }
 
-  # Cloud-init (with shared dotfiles injected)
-  cicustom  = "user=${base64encode(local.cloud_init_with_dotfiles)}"
+  # Cloud-init configuration
+  cicustom  = "user=${base64encode(local.cloud_init_content)}"
   ipconfig0 = "ip=dhcp"
 
   # BIOS and Machine type (standard, no GPU passthrough needed)
@@ -161,6 +122,47 @@ resource "proxmox_vm_qemu" "ubuntu_vm" {
     ignore_changes = [
       network,
       disk,
+    ]
+  }
+
+  # Connection configuration for provisioners
+  # Note: Provisioners run after the VM is created and accessible via SSH
+  # SSH key path should be absolute (e.g., /Users/username/.ssh/id_ed25519)
+  # or relative to the Terraform working directory
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = file(replace(var.ssh_private_key_path, "~", getenv("HOME")))
+    host        = self.default_ipv4_address
+    timeout     = "5m"
+  }
+
+  # Wait for VM to be accessible via SSH and cloud-init to complete
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'Waiting for cloud-init to complete...'",
+      "cloud-init status --wait || true",
+      "sleep 10"  # Additional wait to ensure system is ready
+    ]
+  }
+
+  # Copy bootstrap script to VM
+  provisioner "file" {
+    source      = "${path.module}/../bootstrap.sh"
+    destination = "/tmp/bootstrap.sh"
+  }
+
+  # Copy shared dotfiles to VM
+  provisioner "file" {
+    source      = "${path.module}/../../dotfiles/"
+    destination = "/tmp/dotfiles"
+  }
+
+  # Run bootstrap script to configure zsh and dotfiles
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/bootstrap.sh",
+      "/tmp/bootstrap.sh"
     ]
   }
 }

@@ -36,3 +36,29 @@
 
 # Network Configuration (default: network_bridge="vmbr0")
 # network_bridge = "vmbr0"
+
+# ============================================
+# S3 Backend Configuration (for shared state)
+# ============================================
+# Uncomment and configure if using S3 backend for Terraform state
+# AWS credentials should be set via environment variables:
+#   export AWS_ACCESS_KEY_ID="your-access-key"
+#   export AWS_SECRET_ACCESS_KEY="your-secret-key"
+#
+# Then uncomment the backend block in main.tf and configure:
+#   backend "s3" {
+#     bucket         = "your-terraform-state-bucket"
+#     key            = "vms/ubuntu/terraform.tfstate"
+#     region         = "us-east-1"
+#     dynamodb_table = "terraform-state-lock"
+#     encrypt        = true
+#   }
+#
+# Or use -backend-config flags during terraform init:
+#   terraform init -backend-config="bucket=your-bucket" \
+#                  -backend-config="region=us-east-1" \
+#                  -backend-config="dynamodb_table=your-table"
+
+# SSH Configuration
+# Path to SSH private key for VM provisioning (default: ~/.ssh/id_ed25519)
+# ssh_private_key_path = "~/.ssh/id_ed25519"
