@@ -6,6 +6,36 @@ terraform {
       version = "3.0.2-rc07"
     }
   }
+
+  # Remote backend configuration
+  # Choose ONE of the following options:
+
+  # Option 1: Terraform Cloud (Recommended - Free tier available)
+  # 1. Sign up at https://app.terraform.io
+  # 2. Create a workspace (CLI-driven workflow)
+  # 3. Get your organization name and workspace name
+  # 4. Uncomment and configure:
+  # backend "remote" {
+  #   organization = "your-org-name"
+  #   workspaces {
+  #     name = "gpu-vm"
+  #   }
+  # }
+
+  # Option 2: S3 Backend (If you have AWS)
+  # Requires: S3 bucket and DynamoDB table for state locking
+  # Uncomment and configure:
+  # backend "s3" {
+  #   bucket         = "your-terraform-state-bucket"
+  #   key            = "vms/gpu-vm/terraform.tfstate"
+  #   region         = "us-east-1"
+  #   dynamodb_table = "terraform-state-lock"
+  #   encrypt        = true
+  # }
+
+  # Option 3: Keep local backend (NOT recommended for multi-machine use)
+  # If no backend is specified, Terraform uses local backend
+  # This will cause conflicts when using from multiple machines
 }
 
 # Provider configuration

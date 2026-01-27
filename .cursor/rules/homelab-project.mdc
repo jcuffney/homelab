@@ -18,19 +18,29 @@ This is a homelab infrastructure project using:
 ```
 homelab/
 ├── docs/                    # Documentation
-│   ├── networking-plan.md   # Complete networking setup guide
-│   └── networking/          # Networking documentation
-│       ├── plans/           # Implementation tasks
-│       └── README.md
+│   ├── networking.md        # Networking documentation
+│   ├── opnsense-enable-ssh.md  # OPNsense SSH setup
+│   └── README.md            # Documentation index
+├── dotfiles/                # Root-level dotfiles (bashrc, bash_aliases, bash_profile)
 ├── vms/                     # VM configurations
 │   ├── ubuntu/              # Ubuntu base VM
 │   │   ├── terraform/       # Terraform configuration
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   ├── outputs.tf   # Optional: IP addresses, SSH commands
+│   │   │   └── terraform.tfvars.example
 │   │   ├── cloud-init.yaml  # Cloud-init config
-│   │   └── dotfiles/        # Shell configuration files
+│   │   ├── dotfiles/        # VM-specific shell configuration files
+│   │   └── README.md        # VM-specific documentation
 │   └── gpu-vm/              # GPU-enabled VM
-│       ├── terraform/
+│       ├── terraform/       # Terraform configuration
+│       │   ├── main.tf
+│       │   ├── variables.tf
+│       │   └── terraform.tfvars.example
 │       ├── cloud-init.yaml
-│       └── docker-compose.yml
+│       ├── docker-compose.yml
+│       ├── boostrap.sh      # Bootstrap script (note: filename typo)
+│       └── README.md        # VM-specific documentation
 └── README.md
 ```
 
@@ -44,9 +54,15 @@ homelab/
 - **Only public port**: 51820/UDP (WireGuard VPN)
 
 ### Hostnames
-- `proxmox` → 192.168.1.10
-- `opnsense` → 192.168.1.1
-- VMs use descriptive hostnames (e.g., `ubuntu-vm`, `gpu-vm`)
+**Dual Naming System**: All hosts have BOTH descriptive and themed Middle Earth names (see `.cursorrules` for full details).
+
+- **Proxmox** (virtualization host):
+  - Descriptive: `proxmox` / `proxmox.cuffney.com` → 192.168.1.10
+  - Themed: `numenor` / `numenor.cuffney.com` → 192.168.1.10
+- **OPNsense** (router/firewall):
+  - Descriptive: `opnsense` / `opnsense.cuffney.com` → 192.168.1.1
+  - Themed: `shire` / `shire.cuffney.com` → 192.168.1.1
+- **VMs**: Use both descriptive and themed names (e.g., `ubuntu-vm`/`rivendell`, `gpu-vm`/`rivendell`)
 
 ### User Accounts
 - Primary user: `jcuffney`
@@ -65,7 +81,7 @@ homelab/
 - `variables.tf` - Variable declarations
 - `terraform.tfvars` - Variable values (gitignored)
 - `terraform.tfvars.example` - Example variables template
-- `outputs.tf` - Output values (IP addresses, SSH commands)
+- `outputs.tf` - Output values (IP addresses, SSH commands) - Optional, VM-specific
 
 ### VM Configuration
 - Use Proxmox provider 3.0 syntax (cpu block, disks block, network block)
@@ -161,14 +177,15 @@ homelab/
 2. Copy structure from `vms/ubuntu/` as template
 3. Create `cloud-init.yaml` with VM-specific config
 4. Create `terraform/` directory with Terraform files
-5. Add DNS override in OPNsense for hostname
-6. Add SSH config entry for easy access
-7. Document in appropriate README
+5. **Configure dual naming**: Add BOTH descriptive and themed hostnames in DNS (4 DNS overrides total)
+6. Add SSH config entries for both hostnames
+7. Document both hostnames in `.cursorrules` and VM README
 
 ### Updating DNS
 - Add DNS overrides in OPNsense: Services → Unbound DNS → Overrides
-- Use short hostnames (e.g., `proxmox`, not `proxmox.local`)
-- Update SSH config if needed
+- **REQUIRED**: Configure BOTH descriptive and themed hostnames (4 overrides per host: short descriptive, FQDN descriptive, short themed, FQDN themed)
+- Use short hostnames (e.g., `proxmox`, `numenor`, not `proxmox.local`)
+- Update SSH config with both hostnames if needed
 
 ### Network Changes
 - Always verify firewall rules
@@ -207,9 +224,10 @@ When helping with this project:
 3. **Follow structure** - Maintain existing directory and file organization
 4. **Include tests** - Always provide verification steps
 5. **Document changes** - Update relevant README files
-6. **Check existing docs** - Reference networking-plan.md and implementation-tasks.md
-7. **Use Terraform 3.0 syntax** - Provider 3.0+ syntax for Proxmox resources
-8. **Consider VPN access** - Solutions should work via VPN when applicable
+6. **Check existing docs** - Reference `docs/networking.md`, `docs/README.md`, and VM-specific README files
+7. **Dual naming system** - Always configure both descriptive and themed hostnames (see `.cursorrules`)
+8. **Use Terraform 3.0 syntax** - Provider 3.0+ syntax for Proxmox resources
+9. **Consider VPN access** - Solutions should work via VPN when applicable
 
 ## Common Commands Reference
 
