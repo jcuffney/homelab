@@ -373,11 +373,14 @@ The current configuration includes: Asana, GitHub, AWS, Proxmox, and OPNsense MC
      - Create IAM role with appropriate policies
      - Attach role to instance/service
 2. **Install AWS MCP Server:**
-   - Follow [AWS MCP Server documentation](https://docs.aws.amazon.com/aws-mcp/latest/userguide/what-is-mcp-server.html)
+   - **Package name**: `awslabs.aws-api-mcp-server`
+   - **Installation**: Use `uvx awslabs.aws-api-mcp-server@latest` (requires Python 3.10+ and `uv` package manager)
+   - **Alternative**: Follow [AWS MCP Server documentation](https://docs.aws.amazon.com/aws-mcp/latest/userguide/what-is-mcp-server.html)
    - Or use the managed remote server option
 3. **Configure credentials:**
-   - Set AWS credentials via environment variables, AWS credentials file, or IAM role
+   - Set AWS credentials via environment variables, `~/.aws/credentials` file (recommended), or IAM role
    - Configure MCP server with AWS region (e.g., `us-east-1`)
+   - The server will automatically use `~/.aws/credentials` if environment variables are not set
 4. **Test connection:**
    - Query Route 53 hosted zones for `cuffney.com`
    - List S3 buckets (if using for Terraform state)

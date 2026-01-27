@@ -35,10 +35,15 @@ The `mcp.json` file configures Model Context Protocol servers that extend Cursor
    # GitHub
    export GITHUB_PERSONAL_ACCESS_TOKEN="your-token-here"
    
-   # AWS
-   export AWS_ACCESS_KEY_ID="your-key-here"
-   export AWS_SECRET_ACCESS_KEY="your-secret-here"
-   export AWS_REGION="us-east-1"
+   # AWS (optional - will use ~/.aws/credentials if not set)
+   # The AWS MCP server follows the standard AWS credential chain:
+   # 1. Environment variables (if set)
+   # 2. ~/.aws/credentials file (recommended)
+   # 3. IAM roles (for EC2/ECS)
+   # If you have ~/.aws/credentials configured, you don't need env vars
+   # export AWS_ACCESS_KEY_ID="your-key-here"
+   # export AWS_SECRET_ACCESS_KEY="your-secret-here"
+   export AWS_REGION="us-east-1"  # Optional, defaults to us-east-1
    
    # Proxmox
    export PROXMOX_TOKEN_ID="your-token-id"
@@ -112,6 +117,9 @@ The `rules/` directory contains Cursor rules files (`.mdc` format) that provide 
 
 **Current Rules:**
 - `homelab-project.mdc` - Core project rules, conventions, and infrastructure guidelines
+- `naming-convention.mdc` - Dual naming system (descriptive + Middle Earth themed names)
+- `terraform.mdc` - Terraform conventions and Proxmox provider patterns
+- `yaml.mdc` - YAML conventions for cloud-init and docker-compose
 
 Rules files help the AI assistant understand:
 - Project structure and conventions

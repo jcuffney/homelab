@@ -1,0 +1,229 @@
+---
+description: Dual naming system - descriptive/declarative names AND Middle Earth themed names (REQUIRED for all hosts)
+autoAttach:
+  - "**/cloud-init.yaml"
+  - "**/*dns*"
+  - "**/networking.md"
+  - "**/*hostname*"
+  - "**/terraform/**/*.tf"
+  - "**/.cursorrules"
+---
+
+# Dual Naming Convention (REQUIRED)
+
+## Critical Rule: Both Names Are Mandatory
+
+**IMPORTANT**: All hardware and hosts **MUST** have **BOTH** a descriptive (declarative) hostname AND a themed Middle Earth hostname. This is not optional - both names must be configured.
+
+## Naming Strategy
+
+### Step 1: Choose Descriptive/Declarative Name
+- **Purpose**: Functional/technical name that describes what the host is or does
+- **Examples**: `opnsense`, `proxmox`, `ubuntu-vm`, `docker-host`, `gpu-vm`, `k3s-master`
+- **Format**: Lowercase, hyphenated, descriptive of function
+- **Usage**: Use when clarity is important (troubleshooting, sharing configs, documentation)
+
+### Step 2: Choose Themed Middle Earth Name
+- **Purpose**: Themed name from J.R.R. Tolkien's Middle Earth
+- **Examples**: `shire`, `numenor`, `rivendell`, `gondor`, `gondolin`, `lothlorien`
+- **Format**: Lowercase, single word (no hyphens), Middle Earth place name
+- **Usage**: Use in personal/documentation contexts (e.g., `ssh jcuffney@shire.cuffney.com`)
+
+### Step 3: Configure Both Names in DNS
+**REQUIRED**: Configure BOTH names in DNS (4 DNS overrides total per host):
+1. Short descriptive name (e.g., `opnsense`)
+2. FQDN descriptive name (e.g., `opnsense.cuffney.com`)
+3. Short themed name (e.g., `shire`)
+4. FQDN themed name (e.g., `shire.cuffney.com`)
+
+Both names must resolve to the same IP address.
+
+### Step 4: Document Both Mappings
+- Update `.cursorrules` with both names
+- Update VM-specific README files
+- Update networking documentation
+
+## Current Mappings
+
+### OPNsense (router/firewall)
+- **Descriptive**: `opnsense` / `opnsense.cuffney.com`
+- **Themed**: `shire` / `shire.cuffney.com`
+- **IP**: `192.168.1.1`
+
+### Proxmox (virtualization host)
+- **Descriptive**: `proxmox` / `proxmox.cuffney.com`
+- **Themed**: `numenor` / `numenor.cuffney.com`
+- **IP**: `192.168.1.10`
+
+### Ubuntu VM (general-purpose VM)
+- **Descriptive**: `ubuntu-vm` / `ubuntu-vm.cuffney.com`
+- **Themed**: `gondolin` / `gondolin.cuffney.com`
+- **IP**: TBD (DHCP)
+
+## Middle Earth Name Guidelines
+
+### Available Middle Earth Names
+- **Kingdoms/Realms**: Gondor, Rohan, Mordor, Arnor, Númenor
+- **Cities**: Minas Tirith, Minas Morgul, Osgiliath, Edoras, Dale
+- **Elven Realms**: Rivendell, Lothlórien, Mirkwood, Lindon, Gondolin
+- **Other Places**: Shire, Isengard, Helm's Deep, Weathertop, Barad-dûr
+
+### Naming Rules
+- Use lowercase (e.g., `rivendell`, not `Rivendell`)
+- Single word preferred (e.g., `shire`, not `the-shire`)
+- Avoid hyphens when possible
+- Choose names that fit the host's purpose/character
+- Each host gets a unique Middle Earth name
+
+## DNS Configuration
+
+### OPNsense Unbound DNS Overrides
+Configure in: Services → Unbound DNS → Overrides
+
+For each host, create 4 overrides:
+1. **Short descriptive**: `opnsense` → `192.168.1.1`
+2. **FQDN descriptive**: `opnsense.cuffney.com` → `192.168.1.1`
+3. **Short themed**: `shire` → `192.168.1.1`
+4. **FQDN themed**: `shire.cuffney.com` → `192.168.1.1`
+
+### Route 53 DNS Records (if using AWS)
+Configure public DNS records for both names pointing to the same public IP.
+
+## Cloud-Init Configuration
+
+### Hostname Setting
+In `cloud-init.yaml`, set the descriptive hostname:
+```yaml
+hostname: ubuntu-vm  # Descriptive name
+```
+
+The themed name is configured separately in DNS, not in cloud-init.
+
+## Terraform Configuration
+
+### VM Name Variable
+Use descriptive name in Terraform:
+```hcl
+variable "vm_name" {
+  description = "VM name (descriptive)"
+  type        = string
+  default     = "ubuntu-vm"  # Descriptive name
+}
+```
+
+### Hostname in Cloud-Init
+The cloud-init content should use the descriptive name:
+```hcl
+locals {
+  cloud_init_content = file("${path.module}/../cloud-init.yaml")
+  # cloud-init.yaml contains: hostname: ubuntu-vm
+}
+```
+
+## SSH Configuration
+
+### SSH Config File
+Add entries for both names:
+```
+Host opnsense opnsense.cuffney.com shire shire.cuffney.com
+    HostName 192.168.1.1
+    User jcuffney
+    IdentityFile ~/.ssh/id_ed25519
+
+Host proxmox proxmox.cuffney.com numenor numenor.cuffney.com
+    HostName 192.168.1.10
+    User jcuffney
+    IdentityFile ~/.ssh/id_ed25519
+```
+
+Both names work identically for SSH access.
+
+## Usage Guidelines
+
+### When to Use Descriptive Names
+- Troubleshooting and debugging
+- Sharing configurations with others
+- Technical documentation
+- Infrastructure diagrams
+- Terraform/automation code
+- System logs and monitoring
+
+### When to Use Themed Names
+- Personal documentation
+- Internal notes
+- SSH commands in personal context
+- Fun/personal references
+- Documentation that's primarily for you
+
+### Both Names Work Identically
+- DNS resolution
+- SSH connections
+- HTTP/HTTPS access
+- All network operations
+- Service discovery
+
+## Implementation Checklist
+
+When creating a new host/VM:
+
+- [ ] Choose descriptive name (e.g., `ubuntu-vm`)
+- [ ] Choose themed Middle Earth name (e.g., `gondolin`)
+- [ ] Configure 4 DNS overrides in OPNsense Unbound
+- [ ] Configure Route 53 records (if using AWS)
+- [ ] Set descriptive hostname in cloud-init.yaml
+- [ ] Update Terraform variables with descriptive name
+- [ ] Add SSH config entries for both names
+- [ ] Document both names in `.cursorrules`
+- [ ] Document both names in VM README
+- [ ] Update networking documentation
+
+## Examples
+
+### Creating a New VM
+
+**Step 1: Descriptive Name**
+- Choose: `gpu-vm` (describes it's a GPU-enabled VM)
+
+**Step 2: Themed Name**
+- Choose: `rivendell` (Elven realm, fits a powerful VM)
+
+**Step 3: DNS Configuration**
+- `gpu-vm` → `192.168.1.X`
+- `gpu-vm.cuffney.com` → `192.168.1.X`
+- `rivendell` → `192.168.1.X`
+- `rivendell.cuffney.com` → `192.168.1.X`
+
+**Step 4: Cloud-Init**
+```yaml
+hostname: gpu-vm  # Descriptive name
+```
+
+**Step 5: Documentation**
+- Update `.cursorrules` with both names
+- Update `vms/gpu-vm/README.md` with both names
+
+## Common Mistakes to Avoid
+
+❌ **Creating only one name** - Both are required
+❌ **Using themed name in cloud-init** - Use descriptive name
+❌ **Forgetting DNS configuration** - All 4 DNS overrides required
+❌ **Not documenting both names** - Must be in `.cursorrules` and README
+❌ **Using different IPs** - Both names must resolve to same IP
+❌ **Mixing naming conventions** - Keep descriptive and themed separate
+
+## Verification
+
+To verify both names are configured:
+```bash
+# Test descriptive name
+nslookup opnsense
+nslookup opnsense.cuffney.com
+
+# Test themed name
+nslookup shire
+nslookup shire.cuffney.com
+
+# Both should resolve to same IP
+ssh jcuffney@opnsense
+ssh jcuffney@shire  # Both work identically
+```

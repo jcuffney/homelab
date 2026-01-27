@@ -3,12 +3,9 @@
     "asana": {
       "command": "npx",
       "args": [
-        "-y",
-        "@modelcontextprotocol/server-asana"
-      ],
-      "env": {
-        "ASANA_ACCESS_TOKEN": "${ASANA_ACCESS_TOKEN}"
-      }
+        "mcp-remote",
+        "https://mcp.asana.com/sse"
+      ]
     },
     "github": {
       "command": "npx",
@@ -20,20 +17,19 @@
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
     },
-    "aws": {
-      "command": "npx",
+    "aws-mcp": {
+      "command": "uvx",
+      "timeout": 100000,
+      "transport": "stdio",
       "args": [
-        "-y",
-        "@aws-sdk/mcp-server-aws"
-      ],
-      "env": {
-        "AWS_ACCESS_KEY_ID": "${AWS_ACCESS_KEY_ID}",
-        "AWS_SECRET_ACCESS_KEY": "${AWS_SECRET_ACCESS_KEY}",
-        "AWS_REGION": "${AWS_REGION:-us-east-1}"
-      }
+        "mcp-proxy-for-aws@latest",
+        "https://aws-mcp.us-east-1.api.aws/mcp",
+        "--metadata",
+        "AWS_REGION=us-west-2"
+      ]
     },
     "proxmox": {
-      "command": "uvx",
+      "command": "/Users/jcuffney/.local/bin/uvx",
       "args": [
         "mcp-server-proxmox"
       ],
@@ -44,7 +40,7 @@
       }
     },
     "opnsense": {
-      "command": "uvx",
+      "command": "/Users/jcuffney/.local/bin/uvx",
       "args": [
         "opnsense-mcp-server"
       ],
