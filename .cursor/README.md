@@ -21,9 +21,6 @@ The `mcp.json` file configures Model Context Protocol servers that extend Cursor
 **Current Servers:**
 - **Asana** - Task management and project tracking
 - **GitHub** - Repository management and version control
-- **AWS** - Route 53 DNS management, S3, and AWS services
-- **Proxmox** - VM management and monitoring (192.168.1.10)
-- **OPNsense** - DNS and firewall rule management (192.168.1.1)
 
 **Setup:**
 
@@ -34,82 +31,11 @@ The `mcp.json` file configures Model Context Protocol servers that extend Cursor
    
    # GitHub
    export GITHUB_PERSONAL_ACCESS_TOKEN="your-token-here"
-   
-   # AWS (optional - will use ~/.aws/credentials if not set)
-   # The AWS MCP server follows the standard AWS credential chain:
-   # 1. Environment variables (if set)
-   # 2. ~/.aws/credentials file (recommended)
-   # 3. IAM roles (for EC2/ECS)
-   # If you have ~/.aws/credentials configured, you don't need env vars
-   # export AWS_ACCESS_KEY_ID="your-key-here"
-   # export AWS_SECRET_ACCESS_KEY="your-secret-here"
-   export AWS_REGION="us-east-1"  # Optional, defaults to us-east-1
-   
-   # Proxmox
-   export PROXMOX_TOKEN_ID="your-token-id"
-   export PROXMOX_TOKEN_SECRET="your-token-secret"
-   
-   # OPNsense
-   export OPNSENSE_API_KEY="your-api-key"
-   export OPNSENSE_API_SECRET="your-api-secret"
    ```
 
 2. Restart Cursor to load the MCP configuration.
 
 3. Enable/disable servers by editing `mcp.json`.
-
-**Optional Servers:**
-
-To add optional servers, add them to `mcp.json` and set the corresponding environment variables:
-
-**Plex** - Media server management
-```json
-"plex": {
-  "command": "uvx",
-  "args": ["mcp-server-plex"],
-  "env": {
-    "PLEX_URL": "http://192.168.1.X:32400",
-    "PLEX_TOKEN": "${PLEX_TOKEN}"
-  }
-}
-```
-
-**Home Assistant** - Smart home control
-```json
-"home-assistant": {
-  "command": "uvx",
-  "args": ["mcp-server-home-assistant"],
-  "env": {
-    "HOME_ASSISTANT_URL": "http://192.168.1.X:8123",
-    "HOME_ASSISTANT_TOKEN": "${HOME_ASSISTANT_TOKEN}"
-  }
-}
-```
-
-**n8n** - Workflow automation
-```json
-"n8n": {
-  "command": "npx",
-  "args": ["-y", "@n8n/mcp-server"],
-  "env": {
-    "N8N_API_URL": "${N8N_API_URL}",
-    "N8N_API_KEY": "${N8N_API_KEY}"
-  }
-}
-```
-
-**Kubernetes/k3s** - Cluster management
-```json
-"kubernetes": {
-  "command": "uvx",
-  "args": ["mcp-server-kubernetes"],
-  "env": {
-    "KUBECONFIG": "${KUBECONFIG:-~/.kube/config}"
-  }
-}
-```
-
-See `docs/mcp.md` for detailed setup instructions for each server.
 
 ### Rules Configuration (`rules/`)
 
@@ -172,5 +98,4 @@ Rules files help the AI assistant understand:
 - [MCP Documentation](https://modelcontextprotocol.io/)
 - [Cursor MCP Setup Guide](https://docs.cursor.com/mcp)
 - [Cursor Rules Documentation](https://docs.cursor.com/rules)
-- Project MCP documentation: `docs/mcp.md`
 - Project rules: `.cursorrules` (root-level rules file)

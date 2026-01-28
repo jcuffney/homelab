@@ -16,39 +16,6 @@
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
-    },
-    "aws-mcp": {
-      "command": "uvx",
-      "timeout": 100000,
-      "transport": "stdio",
-      "args": [
-        "mcp-proxy-for-aws@latest",
-        "https://aws-mcp.us-east-1.api.aws/mcp",
-        "--metadata",
-        "AWS_REGION=us-west-2"
-      ]
-    },
-    "proxmox": {
-      "command": "/Users/jcuffney/.local/bin/uvx",
-      "args": [
-        "mcp-server-proxmox"
-      ],
-      "env": {
-        "PROXMOX_HOST": "https://192.168.1.10:8006",
-        "PROXMOX_TOKEN_ID": "${PROXMOX_TOKEN_ID}",
-        "PROXMOX_TOKEN_SECRET": "${PROXMOX_TOKEN_SECRET}"
-      }
-    },
-    "opnsense": {
-      "command": "/Users/jcuffney/.local/bin/uvx",
-      "args": [
-        "opnsense-mcp-server"
-      ],
-      "env": {
-        "OPNSENSE_URL": "https://192.168.1.1",
-        "OPNSENSE_API_KEY": "${OPNSENSE_API_KEY}",
-        "OPNSENSE_API_SECRET": "${OPNSENSE_API_SECRET}"
-      }
     }
   }
 }
