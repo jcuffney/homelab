@@ -24,9 +24,9 @@
 # proxmox_user    = "root@pam"
 # proxmox_target_node = "numenor"  # Change to your actual Proxmox node name
 
-# VM Configuration (defaults: vm_id=200, vm_name="ubuntu-vm", vm_cpu_cores=2, vm_memory_mb=4096, vm_disk_size_gb=50)
-# vm_id          = 200
-# vm_name        = "ubuntu-vm"
+# VM Configuration (defaults: vm_id=100, vm_name="ubuntu", vm_cpu_cores=2, vm_memory_mb=4096, vm_disk_size_gb=50)
+# vm_id          = 100
+# vm_name        = "ubuntu"
 # vm_cpu_cores   = 2
 # vm_memory_mb   = 4096
 # vm_disk_size_gb = 50

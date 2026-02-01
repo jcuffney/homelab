@@ -52,13 +52,13 @@ variable "proxmox_target_node" {
 variable "vm_id" {
   description = "VM ID number (must be unique in Proxmox)"
   type        = number
-  default     = 200
+  default     = 100
 }
 
 variable "vm_name" {
   description = "VM name"
   type        = string
-  default     = "ubuntu-vm"
+  default     = "ubuntu"
 }
 
 variable "vm_cpu_cores" {
