@@ -29,13 +29,13 @@ terraform {
   # To enable, uncomment and configure the backend block below, or use -backend-config flags:
   #   terraform init -backend-config="bucket=your-bucket" -backend-config="region=us-east-1" -backend-config="dynamodb_table=your-table"
   #
-  # backend "s3" {
-  #   bucket         = "your-terraform-state-bucket"
-  #   key            = "vms/ubuntu/terraform.tfstate"
-  #   region         = "us-east-1"
-  #   dynamodb_table = "terraform-state-lock"
-  #   encrypt        = true
-  # }
+  backend "s3" {
+    bucket         = "com.cuffney.homelab-terraform"
+    key            = "vms/ubuntu/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "homelab-terraform-locks"
+    encrypt        = true
+  }
 
   # Option 3: Keep local backend (NOT recommended for multi-machine use)
   # If no backend is specified, Terraform uses local backend
@@ -132,7 +132,7 @@ resource "proxmox_vm_qemu" "ubuntu_vm" {
   connection {
     type        = "ssh"
     user        = "root"
-    private_key = file(replace(var.ssh_private_key_path, "~", getenv("HOME")))
+    private_key = file(pathexpand(var.ssh_private_key_path))
     host        = self.default_ipv4_address
     timeout     = "5m"
   }
